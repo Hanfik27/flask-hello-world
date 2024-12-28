@@ -1,6 +1,6 @@
-from flask import Flask, render_template, Response
 import cv2
 import random
+from flask import Flask, Response
 
 app = Flask(__name__)
 
@@ -29,32 +29,28 @@ def detect_emotion(frame):
         eye_count = len(eyes)
         smile_count = len(smiles)
 
-        # Tentukan emosi dan persentase
+        # Menghitung persentase untuk setiap emosi
         if smile_count > 0:
             emotion = "Happy"
-            confidence = random.uniform(90, 100)  # Senyuman = 90-100% acak
+            confidence = random.uniform(80, 100)  # Persentase acak antara 80 dan 100%
         elif eye_count < 2:
             emotion = "Stressed"
-            confidence = random.uniform(60, 80)  # Mata kurang jelas = 60-80% acak
+            confidence = random.uniform(30, 80)  # Persentase acak antara 30 dan 80%
         elif eye_count >= 2 and smile_count == 0:
             emotion = "Angry"
-            confidence = random.uniform(75, 85)  # Mata jelas, tidak ada senyuman = 75-85% acak
-        elif eye_count >= 2 and smile_count == 0:
+            confidence = random.uniform(50, 85)  # Persentase acak antara 50 dan 85%
+        elif eye_count == 0 and smile_count == 0:
             emotion = "Sad"
-            confidence = random.uniform(60, 75)  # Mata jelas, tidak ada senyuman = 60-75% acak
+            confidence = random.uniform(20, 60)  # Persentase acak antara 20 dan 60%
         else:
             emotion = "Neutral"
-            confidence = random.uniform(40, 60)
+            confidence = random.uniform(0, 40)  # Persentase acak antara 0 dan 40%
 
         # Gambar kotak di sekitar wajah dan tambahkan label emosi dan persentase
         cv2.rectangle(frame, (x, y), (x+w, y+h), (255, 0, 0), 2)
-        cv2.putText(frame, f"{emotion} ({confidence}%)", (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
+        cv2.putText(frame, f"{emotion} ({int(confidence)}%)", (x, y-10), cv2.FONT_HERSHEY_SIMPLEX, 1, (255, 255, 255), 2)
 
     return frame
-
-@app.route('/')
-def index():
-    return render_template('index.html')
 
 def generate_frames():
     while True:
@@ -73,4 +69,4 @@ def video_feed():
     return Response(generate_frames(), mimetype='multipart/x-mixed-replace; boundary=frame')
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=True, host="0.0.0.0", port=5000)
